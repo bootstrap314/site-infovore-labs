@@ -1,0 +1,28 @@
+{
+  "identity": {
+    "event": "ready",
+    "kernel": "6.6.90-personal",
+    "machine": "i686",
+    "ncurses": "ncurses 6.5.20240427",
+    "pid": 1,
+    "page": 0,
+    "rows": 32,
+    "cols": 96
+  },
+  "coldBootMs": 963,
+  "stateBytes": 6704948,
+  "compressedBytes": 1243968,
+  "hashes": {
+    "guest/site.c": "55b1c62b9de6a0caa892ead98330d7c856ba6a9ca137d168fa06c462d9b6a863",
+    "guest/kernel.config": "c57bbe50223fb3eaba4a1c7c05a26d0f7da9d1e16953b0b1bfa3a86044edc202",
+    "guest/build.sh": "2a9c4af388e37ab10338600e34ea0fb0b50a06f2cc30650daeda83e195903f5d",
+    "scripts/initramfs.py": "c1765a052a6da6bb112a51905eda79fe91102aeeb28da0cd89627ba903ceacb4",
+    "scripts/vm-options.mjs": "709ff5428c81e76920c26a248686685a71c6df74ad28f5ba357b082e539a500a",
+    "public/vm/bzImage": "1557933f1a2d9bd057b3a66ad11bc4a06f9169c359815bc5613cea90ea1c94a8",
+    "public/vm/initramfs.cpio.gz": "f4c8138b94fd6a980287a9ac9776c95d11d18f2233d4a499aa89306180abedca",
+    "public/vm/seabios.bin": "73e3f359102e3a9982c35fce98eb7cd08f18303ac7f1ba6ebfbe6cdc1c244d98",
+    "public/vm/vgabios.bin": "a4bc0d80cc3ca028c73dafa8fee396b8d054ce87ebd8abfbd31b06b437607880",
+    "node_modules/v86/build/v86.wasm": "effc27d2da888631201bc1c9307361134f71af945f678c25a037f9959a4d1b88",
+    "node_modules/v86/build/libv86.js": "f370cb8eec9096447e071d89033ba5b396ebbce6bbf2065cd995bf30ebb44062"
+  }
+}

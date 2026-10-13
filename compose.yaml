@@ -1,0 +1,10 @@
+services:
+  guest-builder:
+    build: ./guest
+    volumes:
+      - .:/project
+      - guest-cache:/build
+    working_dir: /project
+    command: ["sh", "guest/build.sh"]
+volumes:
+  guest-cache:

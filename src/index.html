@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181b18">
+  <meta name="description" content="A small personal space, running inside a real Linux machine in your browser.">
+  <title>Personal / Space</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="{{xtermCss}}">
+  <link rel="stylesheet" href="{{style}}">
+  <script type="module" src="{{app}}"></script>
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <a class="wordmark" href="./" aria-label="Personal Space home"><span class="mark">p<span>_</span></span><span>personal / space</span></a>
+      <span class="edition">AN INTERNET HOMESTEAD <span class="edition-dot">·</span> v0.1</span>
+    </header>
+    <section class="machine" aria-label="Personal website terminal">
+      <div class="machine-bar">
+        <div class="session"><span class="status-dot" id="status-dot"></span><span>visitor@personal</span><span class="path">:~</span></div>
+        <div class="machine-actions"><span id="status" role="status">Starting Linux</span><button id="restart" title="Start a fresh Linux session" aria-label="Restart Linux session">↻</button></div>
+      </div>
+      <div class="terminal-wrap">
+        <div id="terminal" aria-label="Interactive Linux terminal. Use arrows or keys 1 through 5 to navigate."></div>
+        <div id="boot" class="boot" role="status">
+          <div class="boot-glyph">[<span> / </span>]</div>
+          <p id="boot-title">A small machine is waking up.</p>
+          <p id="boot-detail">Loading Linux into this browser tab</p>
+          <button id="retry" hidden>Try a fresh boot</button>
+        </div>
+      </div>
+      <nav class="touch-nav" aria-label="Terminal pages">
+        <button data-page="0" aria-current="page"><span>01</span> Home</button>
+        <button data-page="1"><span>02</span> About</button>
+        <button data-page="2"><span>03</span> Work</button>
+        <button data-page="3"><span>04</span> Notes</button>
+        <button data-page="4"><span>05</span> System</button>
+      </nav>
+    </section>
+    <footer><span>A little space, a whole operating system.</span><button id="text-toggle" aria-expanded="false" aria-controls="text-view">Read as text <span>↗</span></button></footer>
+    <section id="text-view" class="text-view" hidden tabindex="-1">
+      <p class="eyebrow">PERSONAL / SPACE</p>
+      <h1>Hello, visitor.</h1>
+      <p>This personal website is under construction. About, work, and notes will be added after the foundation is ready.</p>
+      <p>The interactive version runs a native ncurses program in a Linux guest inside your browser. Use the page buttons or keys 1–5 to explore it.</p>
+      <p><a href="THIRD_PARTY_NOTICES.txt">Open-source credits</a></p>
+    </section>
+    <noscript><p class="text-view">This website runs Linux in WebAssembly and needs JavaScript for its terminal. Personal content is coming soon.</p></noscript>
+  </main>
+</body>
+</html>

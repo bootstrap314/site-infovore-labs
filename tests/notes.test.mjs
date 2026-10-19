@@ -5,11 +5,12 @@ import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, symlink } from 'node:
 import { compilePost, compileNotes, noteSources } from '../scripts/notes.mjs';
 
 test('Markdown becomes structured prose, lists, code, tables, references, and typeset math',async()=>{
-  const post=await compilePost('# A note\n\nHello **reader**, $x^2$.\n\n- One\n- Two\n\n```js\nlet x = 1;\n```\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n[Link][ref]\n\n[ref]: https://example.com\n\n$$\n\\frac{1}{2}\n$$\n','a-note.md');
+  const post=await compilePost('# A note\n\nHello **reader**, $x^2$. Use `make build`.\n\n- One\n- Two\n\n```js\nlet x = 1;\n```\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n[Link][ref]\n\n[ref]: https://example.com\n\n$$\n\\frac{1}{2}\n$$\n','a-note.md');
   assert.equal(post.title,'A note');
+  assert.match(post.blocks[0].html,/<code>make build<\/code>/);
   assert.ok(post.blocks.some(b=>b.text.includes('Hello reader, x².')));
   assert.ok(post.blocks.some(b=>b.text==='• One'));
-  assert.ok(post.blocks.some(b=>b.kind==='pre'&&b.text==='let x = 1;'));
+  assert.ok(post.blocks.some(b=>b.kind==='pre'&&b.code===true&&b.text==='let x = 1;'));
   assert.ok(post.blocks.some(b=>b.text.includes('Link (https://example.com)')));
   assert.ok(post.blocks.some(b=>b.kind==='math'&&/1\n.*─.*\n.*2/.test(b.text)));
 });

@@ -20,6 +20,7 @@ static int help;
 static int resume_request;
 static struct utsname system_name;
 enum { PAGE_HOME, PAGE_ABOUT, PAGE_WORK, PAGE_NOTES, PAGE_PROJECTS, PAGE_SYSTEM, PAGE_SHELL, PAGE_COUNT };
+enum { NAV_ROW = 1, CONTENT_ROW = 4, READER_ROW = 7 };
 static const char *pages[] = {"Home", "About", "Work", "Notes", "Projects", "System", "Shell"};
 static const char *short_pages[] = {"Home", "Me", "Work", "Notes", "Proj", "Sys", "Shell"};
 static const char *tiny_pages[] = {"Ho", "Me", "Wo", "No", "Pr", "Sy", "Sh"};
@@ -88,17 +89,14 @@ static void draw(void) {
     int narrow = COLS < 66;
     int x = narrow ? 2 : 5;
     int width = COLS - x * 2;
-    text(1, x, "PERSONAL / SPACE", 2);
-    if (!narrow) text(1, COLS - 23, "LINUX  /  NCURSES", 3);
-    attrset(COLOR_PAIR(4)); mvhline(3, x, ACS_HLINE, width);
     int nav = x;
     for (int i = 0; i < PAGE_COUNT; i++) {
         char label[32];
         nav_label(label,sizeof(label),i);
-        text(5, nav, label, i == page ? 5 : 3);
+        text(NAV_ROW, nav, label, i == page ? 5 : 3);
         nav += (int)strlen(label) + (COLS<86 ? 1 : 2);
     }
-    int y = 8;
+    int y = CONTENT_ROW;
     if (help) {
         text(y, x, "A small field guide.", 2);
         y = paragraph(y + 2, x, width, "Left/Right, Tab, or 1-7 changes sections. In Notes and Projects, Up/Down chooses a post and Enter opens it. Up/Down, PgUp/PgDn, or the wheel turns pages. Esc returns; h/l pans wide content; d switches diagrams between images and ASCII.", 1);
@@ -132,24 +130,24 @@ static void draw(void) {
             text(y,x,page==PAGE_PROJECTS ? "Projects from the terminal." : "Notes from the terminal.",2);
             if (!reader_note_count) text(y+2,x,page==PAGE_PROJECTS ? "No projects published yet." : "No notes published yet.",3);
             else {
-                int visible=LINES-15;
+                int visible=LINES-READER_ROW-4;
                 if (selected_note<index_top) index_top=selected_note;
                 if (selected_note>=index_top+visible) index_top=selected_note-visible+1;
                 snprintf(label,sizeof(label),"%d posts · ↑/↓ choose · Enter read",reader_note_count); text(y+1,x,label,3);
                 for (int i=index_top;i<reader_note_count && i<index_top+visible;i++) {
                     snprintf(label,sizeof(label),"%s %s%s%s",i==selected_note ? "›" : " ",reader_notes[i].date,*reader_notes[i].date ? "  " : "",reader_notes[i].title);
-                    text(11+i-index_top,x,label,i==selected_note ? 5 : 1);
+                    text(READER_ROW+i-index_top,x,label,i==selected_note ? 5 : 1);
                 }
             }
         } else {
             text(y,x,reader_notes[open_note].title,2);
-            layout_note(width,LINES-15);
+            layout_note(width,LINES-READER_ROW-4);
             snprintf(label,sizeof(label),"[ Back ]   [ Prev ]  [ Next ]   %d/%d",reader_page+1,reader_pages);
             text(y+1,x,label,3);
             int begin=reader_page*body_height;
             for (int i=0;i<body_height && begin+i<row_count;i++) {
                 ReadRow *row=&read_rows[begin+i];
-                if (row->text) wide_text(11+i,x+row->offset,row->text,width-row->offset,row->pair,reader_pan);
+                read_row_output(row,READER_ROW+i,x,width);
             }
         }
     } else if (page==PAGE_SHELL) {
@@ -184,7 +182,7 @@ static void draw(void) {
     keypad(stdscr,TRUE);
     if (!help && reader_page_active() && open_note>=0) {
         int begin=reader_page*body_height;
-        for (int i=0;i<body_height && begin+i<row_count;i++) if (read_rows[begin+i].image) image_output(&read_rows[begin+i],11+i,x);
+        for (int i=0;i<body_height && begin+i<row_count;i++) if (read_rows[begin+i].image) image_output(&read_rows[begin+i],READER_ROW+i,x);
     }
 }
 
@@ -321,7 +319,7 @@ int main(int argc,char **argv) {
                 MEVENT event;
                 if (getmouse(&event) != OK) break;
                 int clicked=(event.bstate & BUTTON1_PRESSED)!=0;
-                if (clicked && event.y == 5) {
+                if (clicked && event.y == NAV_ROW) {
                     int col = COLS < 66 ? 2 : 5;
                     for (int i = 0; i < PAGE_COUNT; i++) {
                         char label[32];nav_label(label,sizeof(label),i);
@@ -332,10 +330,10 @@ int main(int argc,char **argv) {
                 } else if (!help && reader_page_active()) {
                     if (event.bstate & BUTTON4_PRESSED) {note_move(-1);changed=1;}
                     if (event.bstate & BUTTON5_PRESSED) {note_move(1);changed=1;}
-                    if (clicked && open_note<0 && event.y>=11 && event.y<LINES-4) {
-                        int index=index_top+event.y-11;
+                    if (clicked && open_note<0 && event.y>=READER_ROW && event.y<LINES-4) {
+                        int index=index_top+event.y-READER_ROW;
                         if(index<reader_note_count) {selected_note=index;note_open();changed=1;}
-                    } else if (clicked && open_note>=0 && event.y==9) {
+                    } else if (clicked && open_note>=0 && event.y==CONTENT_ROW+1) {
                         int col=event.x-(COLS<66 ? 2 : 5);
                         if(col>=0 && col<8)close_note();else if(col>=11 && col<19)note_move(-1);else if(col>=21 && col<29)note_move(1);
                         changed=1;
@@ -343,7 +341,7 @@ int main(int argc,char **argv) {
                 } else if (!help && page==2 && clicked && event.y==LINES-6) {
                     resume_request=1;changed=1;
                 } else if (!help && page==PAGE_SYSTEM && clicked) {
-                    if(theme_picker && event.y>=10 && event.y<16) {theme_cursor=event.y-10;theme_request=theme_cursor;changed=1;}
+                    if(theme_picker && event.y>=CONTENT_ROW+2 && event.y<CONTENT_ROW+8) {theme_cursor=event.y-CONTENT_ROW-2;theme_request=theme_cursor;changed=1;}
                     else if(event.y==LINES-6) {theme_picker=1;theme_cursor=theme_choice;changed=1;}
                 }
                 break;

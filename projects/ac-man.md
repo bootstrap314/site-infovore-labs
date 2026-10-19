@@ -14,11 +14,13 @@ The design keeps protocol and command decisions in one core, treats device capab
 
 ## The native app
 
-The menu-bar panel keeps the current temperature, target, operating mode, fan controls, and airflow settings together. These screenshots show the actual native controls in light and dark appearances with example room data. The available controls depend on the selected unit's capabilities.
-
 ![Light appearance: target temperature, fan controls, and vent positions for an example living room.](images/ac-man-light.png "light")
 
-![Dark appearance: the same native controls and example room data.](images/ac-man-dark.png "dark")
+The menu-bar panel keeps the current temperature, target, operating mode, fan controls, and airflow settings together. This screenshot shows the actual native controls in light appearance with example room data. The available controls depend on the selected unit's capabilities.
+
+The current reading and requested temperature answer different questions, so the panel gives each its own place. Mode and fan controls sit alongside airflow settings, making the selected unit's operating state readable without opening a separate settings window. A room label identifies the device being controlled; the example label is not a fixed part of the application.
+
+These are native AppKit controls backed by the shared Rust controller. A change can be pending while the app waits for a reply, and controls unavailable on the selected unit stay out of the way. The sections below explain how capability discovery, input scheduling, and readback keep that compact interface connected to the appliance's actual behavior.
 
 ## One controller, two interfaces
 

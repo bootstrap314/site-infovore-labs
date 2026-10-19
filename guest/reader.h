@@ -5,9 +5,10 @@
 #include "../.build/notes.h"
 #include "../.build/projects.h"
 
-typedef struct { wchar_t *text; int pair; const NoteBlock *image; int image_cols, image_rows, offset, block; } ReadRow;
+typedef struct { wchar_t *text; int pair; const NoteBlock *image; int image_cols, image_rows, image_offset, offset, text_width, box, block; } ReadRow;
 static ReadRow *read_rows;
 static int row_count, row_capacity, body_height, layout_block;
+static struct { const NoteBlock *image; int start, end, cols, rows, offset, text_width; } flow;
 typedef struct { int selected, opened, top, position, pages, pan, ascii, anchor; } ReaderState;
 static ReaderState reader_states[2]={{.opened=-1,.pages=1,.anchor=-1,.ascii=1},{.opened=-1,.pages=1,.anchor=-1,.ascii=1}};
 static ReaderState *reader=&reader_states[0];
@@ -53,6 +54,20 @@ static wchar_t *to_wide(const char *s) {
     return result;
 }
 
+static void read_row_output(const ReadRow *row, int y, int x, int width) {
+    if(row->box) {
+        attrset(COLOR_PAIR(4));
+        if(row->box==2) {
+            mvaddch(y,x,ACS_VLINE);mvaddch(y,x+width-1,ACS_VLINE);
+        } else {
+            mvaddch(y,x,row->box==1 ? ACS_ULCORNER : ACS_LLCORNER);
+            mvhline(y,x+1,ACS_HLINE,width-2);
+            mvaddch(y,x+width-1,row->box==1 ? ACS_URCORNER : ACS_LRCORNER);
+        }
+    }
+    if(row->text)wide_text(y,x+row->offset,row->text,row->text_width ? row->text_width : width-row->offset,row->pair,reader_pan);
+}
+
 static void add_row(const wchar_t *s, size_t length, int pair, const NoteBlock *image, int cols, int rows) {
     if (row_count == row_capacity) {
         int capacity = row_capacity ? row_capacity * 2 : 256;
@@ -62,23 +77,59 @@ static void add_row(const wchar_t *s, size_t length, int pair, const NoteBlock *
     }
     ReadRow *row = &read_rows[row_count++];
     *row = (ReadRow){.pair=pair,.image=image,.image_cols=cols,.image_rows=rows,.block=layout_block};
+    if(flow.image && row_count<=flow.end) {
+        row->text_width=flow.text_width;
+        if(row_count-1==flow.start) {
+            row->image=flow.image;row->image_cols=flow.cols;row->image_rows=flow.rows;row->image_offset=flow.offset;
+        }
+    }
     if (s) {
         row->text = calloc(length+1,sizeof(wchar_t));
         if (row->text) wmemcpy(row->text,s,length);
     }
 }
 
+static void finish_flow(void) {
+    while(row_count<flow.end)add_row(NULL,0,1,NULL,0,0);
+    flow.image=NULL;
+}
+
+static void code_rows(const wchar_t *source, int width, int height) {
+    int lines=1;
+    for(const wchar_t *p=source;*p;p++)if(*p==L'\n')lines++;
+    if(lines+2<=height && row_count%height+lines+2>height)
+        while(row_count%height)add_row(NULL,0,1,NULL,0,0);
+    while(lines>0) {
+        int available=height-row_count%height;
+        if(available<3) {while(row_count%height)add_row(NULL,0,1,NULL,0,0);available=height;}
+        int count=lines<available-2 ? lines : available-2;
+        add_row(NULL,0,4,NULL,0,0);read_rows[row_count-1].box=1;
+        for(int i=0;i<count;i++) {
+            size_t length=wcscspn(source,L"\n");
+            add_row(source,length,1,NULL,0,0);
+            ReadRow *row=&read_rows[row_count-1];
+            row->box=2;row->offset=2;row->text_width=width-4;
+            source+=length;if(*source==L'\n')source++;
+        }
+        add_row(NULL,0,4,NULL,0,0);read_rows[row_count-1].box=3;
+        lines-=count;
+    }
+}
+
 static void layout_note(int width, int height) {
     for (int i=0;i<row_count;i++) free(read_rows[i].text);
-    row_count=0; body_height=height;
+    row_count=0; body_height=height; memset(&flow,0,sizeof(flow));
     if (open_note < 0 || open_note >= reader_note_count) return;
     const Note *note = &reader_notes[open_note];
     for (int b=0;b<note->count;b++) {
         const NoteBlock *block = &note->blocks[b];
+        if(block->kind!=0 && block->kind!=1)finish_flow();
         layout_block=b;
         int ascii=block->diagram && reader->ascii && *block->ascii;
         if (block->kind == 4 && !ascii) {
-            double scale = fmin(1.0,fmin((width-2)*cell_width/block->width,(height-1)*cell_height/block->height));
+            int floating=block->screenshot && width>=70;
+            int image_width=floating ? width*2/5 : width-2;
+            double scale = fmin(1.0,fmin(image_width*cell_width/block->width,(height-1)*cell_height/block->height));
             int cols = (int)floor(block->width*scale/cell_width);
             if (cols<1) cols=1;
             int rows = (int)ceil(block->height*(cols*cell_width/block->width)/cell_height);
@@ -86,8 +137,13 @@ static void layout_note(int width, int height) {
             if (row_count % height + rows > height) {
                 while (row_count % height) add_row(NULL,0,1,NULL,0,0);
             }
+            if(floating) {
+                flow.image=block;flow.start=row_count;flow.end=row_count+rows;
+                flow.cols=cols;flow.rows=rows;flow.offset=width-cols;flow.text_width=width-cols-3;
+                continue;
+            }
             add_row(NULL,0,1,block,cols,rows);
-            if(block->diagram)read_rows[row_count-1].offset=(width-cols)/2;
+            read_rows[row_count-1].image_offset=(width-cols)/2;
             for (int i=1;i<rows;i++) add_row(NULL,0,1,NULL,0,0);
         } else if (block->kind == 5) {
             wchar_t rule[241]; int n=width < 240 ? width : 240;
@@ -96,6 +152,7 @@ static void layout_note(int width, int height) {
         } else {
             wchar_t *wide = to_wide(ascii ? block->ascii : block->text);
             if (!wide) continue;
+            if(block->code) {code_rows(wide,width,height);free(wide);add_row(NULL,0,1,NULL,0,0);continue;}
             const wchar_t *s=wide;
             int pair = block->kind == 1 ? 2 : block->kind == 3 ? 6 : 1;
             int pre = ascii || block->kind == 2 || block->kind == 3;
@@ -118,9 +175,10 @@ static void layout_note(int width, int height) {
                 if (!length) add_row(L"",0,pair,NULL,0,0);
                 while (used < length) {
                     size_t n=0, space=0; int cells=0;
+                    int line_width=flow.image && row_count<flow.end ? flow.text_width : width;
                     while (used+n < length) {
                         int w=wcwidth(s[used+n]); if (w<0) w=1;
-                        if (!pre && cells+w > width) break;
+                        if (!pre && cells+w > line_width) break;
                         if (s[used+n]==L' ') space=n;
                         cells+=w; n++;
                     }
@@ -135,6 +193,7 @@ static void layout_note(int width, int height) {
         }
         add_row(NULL,0,1,NULL,0,0);
     }
+    finish_flow();
     reader_pages = row_count ? (row_count+height-1)/height : 1;
     if(reader->anchor>=0) {
         for(int i=0;i<row_count;i++)if(read_rows[i].block==reader->anchor && (read_rows[i].text || read_rows[i].image)) {reader_page=i/height;break;}
@@ -171,7 +230,7 @@ static void note_move(int direction) {
 }
 
 static void image_output(const ReadRow *row, int y, int x) {
-    x+=row->offset;
+    x+=row->image_offset;
     const char *path = theme_resolved == 2 ? row->image->light_image : row->image->image;
     FILE *file=fopen(path,"rb");
     if (!file) return;

@@ -71,7 +71,7 @@ try {
   await page.locator('[data-text-diagrams]').click();
   await figure.locator('.diagram-ascii').waitFor();assert.equal(await img.isVisible(),false);
   assert.equal(await page.evaluate(()=>window.siteMetrics.renderedIdentity.diagramAscii),0,'Text mode leaves terminal images alone');
-  assert.equal(await page.locator('[data-text-project="0"] .post-screenshot img:visible').count(),2);
+  assert.equal(await page.locator('[data-text-project="0"] .post-screenshot img:visible').count(),1);
   await page.locator('[data-text-diagrams]').click();await decoded(page,img);
   const darkSource=await img.evaluate(el=>el.currentSrc);
   await page.emulateMedia({colorScheme:'light'});

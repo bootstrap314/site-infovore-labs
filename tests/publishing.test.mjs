@@ -39,7 +39,9 @@ test('publish only the build inventory, with explicit MIME/cache metadata and si
   assert.equal(production.files.at(-1).key,'sw.js');
   assert.ok(production.files.filter(file=>file.phase===0).every(file=>file.cacheControl.includes('immutable')));
   assert.ok(production.files.filter(file=>file.phase!==0).every(file=>file.cacheControl==='no-cache'));
-  assert.ok(staging.files.every(file=>file.cacheControl==='private, no-store'));
+  assert.ok(staging.files.filter(file=>file.phase===0).every(file=>file.cacheControl==='private, max-age=31536000, immutable'));
+  assert.ok(staging.files.filter(file=>file.phase!==0).every(file=>file.cacheControl==='private, no-store'));
+  assert.ok(staging.files.every(file=>!file.cacheControl.includes('public')));
   await writeFile(join(root,'index.html'),'changed after build');
   await assert.rejects(deploymentPlan('production',root),/integrity mismatch/);
   await assert.rejects(deploymentPlan('prodution',root),/Choose staging or production/);
@@ -121,7 +123,7 @@ test('production promotion accepts only completed main push runs with successful
   assert.throws(()=>verifyPromotion(run,[{name:'Publish staging',conclusion:'skipped'}],repository),/did not successfully/);
 });
 
-test('staging unregisters only this site’s cache; public hosts still register offline support',async()=>{
+test('staging removes only this site’s offline cache so entry navigations still reach Access',async()=>{
   const source=await readFile('src/offline.js','utf8');
   for(const hostname of ['staging.infovore-labs.com','www.infovore-labs.com','infovore-labs.com','localhost']) {
     const scope=`https://${hostname}/`,calls=[];

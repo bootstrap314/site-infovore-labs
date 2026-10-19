@@ -7,7 +7,7 @@ This setup serves the compiled site directly from two R2 buckets through Cloudfl
 | Staging | `infovore-labs-staging` | `staging.infovore-labs.com` | Your Cloudflare login, restricted to your email |
 | Production | `infovore-labs-production` | `www.infovore-labs.com`, `infovore-labs.com` | Public |
 
-Both public hostnames serve the site directly. Their browser storage is separate. Hostnames and bucket names are declared in [config.json](config.json). Staging's hostname also appears in `src/offline.js`, which disables its offline cache.
+Both public hostnames serve the site directly. Their browser storage is separate. Hostnames and bucket names are declared in [config.json](config.json). Staging's hostname also appears in `src/offline.js`: it uses private HTTP caching for versioned assets, while disabling the offline service worker so new page loads still require Cloudflare Access.
 
 ## One-time Cloudflare setup
 
@@ -26,7 +26,11 @@ R2 maps paths to object keys and does not use the site's `_headers` file. Add th
 - **URL Rewrite Rule:** for the three site hostnames when the path equals `/`, statically rewrite the path to `/index.html`. Leave the query unchanged. This is an internal rewrite, so `/#shell` and `/?cold` remain normal entry URLs. There is no catch-all SPA rewrite; other missing objects remain 404s. See [URL Rewrite Rules](https://developers.cloudflare.com/rules/transform/url-rewrite/).
 - **Cache Rule 1:** bypass cache for all requests to the three hostnames. This keeps HTML, the service worker, manifest, PDF, and other fixed URLs current.
 - **Cache Rule 2 (after rule 1):** for the two public hostnames only, make `/assets/`, `/notes-assets/`, and `/projects-assets/` eligible for cache. Respect origin cache headers for both edge and browser TTL. These directories use content-addressed filenames; the publisher sets `public, max-age=31536000, immutable`. See [R2 and the CDN cache](https://developers.cloudflare.com/cache/interaction-cloudflare-products/r2/).
-- **Response Header Transform Rule:** on staging, set `Cache-Control: private, no-store` and `X-Robots-Tag: noindex, nofollow, noarchive`. Staging objects also receive `private, no-store` as R2 metadata. Staging never registers the offline service worker and removes any previous site cache on load.
+- **Response Header Transform Rule:** on staging, set `X-Robots-Tag: noindex, nofollow, noarchive`. Do not override `Cache-Control`: the publisher sets the policy on each R2 object. Remove the previous blanket `private, no-store` header override when upgrading this configuration.
+
+Staging's content-addressed files under `/assets/`, `/notes-assets/`, and `/projects-assets/` use `Cache-Control: private, max-age=31536000, immutable`. That includes the Linux snapshot, emulator/WASM, scripts, styles, and images. The browser can reuse them after an authenticated download; shared caches remain disabled. New content gets a new filename and is downloaded automatically. Entry pages and all fixed URLs retain `private, no-store`, so every new page load reaches Access and sees the current deployment. Staging never registers the offline service worker and removes any previous site Cache Storage cache on load; that cleanup does not remove the browser's HTTP cache.
+
+This provides fast repeat visits while retaining the login requirement for entry pages and all network requests. It does not provide offline staging access or erase already-downloaded files at logout. A person with access to the same browser profile can inspect its cached files, and an already-running Linux session continues until closed or reloaded. Clear browser site data to remove those local copies. Production retains the full offline cache.
 
 Use Cloudflare's standard response compression; where configuring Compression Rules explicitly, enable Brotli with gzip fallback for supported content types. The uploader sends original bytes and skips `.br`/`.gz` HTTP sidecars, because R2 does not negotiate sidecar filenames. It retains the actual `initramfs.cpio.gz` resource. WASM receives `application/wasm`; the `.zst` snapshot receives `application/octet-stream` with **no Content-Encoding**. v86 decodes that snapshot itself. Files already downloaded into an open browser cannot be revoked by an Access logout; staging's next network visit requires authentication again.
 

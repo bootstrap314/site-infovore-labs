@@ -2,8 +2,9 @@
 let registered;
 async function register() {
   if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
-  // Access must check subsequent staging visits, including after logout.
-  // Production and localhost retain the complete offline experience.
+  // Staging uses private HTTP caching for hashed assets, but every entry-page
+  // navigation must still reach Access. A cache-first service worker would
+  // bypass that login check. Production/localhost retain full offline support.
   if(location.hostname==='staging.infovore-labs.com') {
     const scope=new URL('../',import.meta.url).href;
     const registration=await navigator.serviceWorker.getRegistration(scope);

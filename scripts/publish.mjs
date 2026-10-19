@@ -34,7 +34,9 @@ export async function deploymentPlan(environment,root='dist') {
     if(file.integrity!=='sha256-'+digest(bytes))throw new Error(`Build integrity mismatch: ${key}`);
     files.push({key,path:resolve(root,key),bytes:bytes.length,sha256:digest(bytes),
       contentType:types[extname(key)] || 'application/octet-stream',
-      cacheControl:environment==='staging' ? 'private, no-store' : immutable(key) ? 'public, max-age=31536000, immutable' : 'no-cache',
+      cacheControl:immutable(key)
+        ? `${environment==='staging' ? 'private' : 'public'}, max-age=31536000, immutable`
+        : environment==='staging' ? 'private, no-store' : 'no-cache',
       phase:immutable(key) ? 0 : ['index.html','resume.html'].includes(key) ? 2 : key==='sw.js' ? 3 : 1});
   }
   for(const key of ['index.html','resume.html','manifest.json','sw.js'])if(!seen.has(key))throw new Error(`Missing ${key}`);

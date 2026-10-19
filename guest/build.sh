@@ -15,7 +15,7 @@ if [ ! -f "linux-$LINUX.tar.xz" ]; then
 fi
 prepare_source "linux-$LINUX.tar.xz" "linux-$LINUX" ff856748671629c1fefef219099e0b4b81131c2d325e768cb0806e204157014e
 if [ ! -f "ncurses-$NCURSES.tar.gz" ]; then
-  curl -fL --retry 3 "https://invisible-mirror.net/archives/ncurses/ncurses-$NCURSES.tar.gz" -o "ncurses-$NCURSES.tar.gz"
+  curl -fL --retry 3 "https://ftp.gnu.org/gnu/ncurses/ncurses-$NCURSES.tar.gz" -o "ncurses-$NCURSES.tar.gz"
 fi
 prepare_source "ncurses-$NCURSES.tar.gz" "ncurses-$NCURSES" 136d91bc269a9a5785e5f9e980bc76ab57428f604ce3e5a5a90cebc767971cc6
 if [ ! -f "$BUILD/musl/bin/musl-gcc" ]; then

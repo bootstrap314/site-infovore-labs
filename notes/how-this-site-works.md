@@ -43,7 +43,25 @@ The machine has 128 MiB of emulated RAM. This is a runtime capacity, not a downl
 
 ## One Makefile, several compilers
 
-Publishing begins with source files and ends with a `dist/` directory. Running `make build` drives the complete dependency chain. The Makefile lives at the root of the `terminal-site` repository. Run it there, or use `make -C /path/to/terminal-site build` from another directory. Plain `make` (or `make help`) lists the build, preview, test, and packaging targets.
+Publishing begins with source files and ends with a `dist/` directory. The Makefile lives at the root of the `terminal-site` repository. From that directory, build the complete site with:
+
+```sh
+make build
+```
+
+From another directory, point Make at the repository:
+
+```sh
+make -C /path/to/terminal-site build
+```
+
+To list the build, preview, test, and packaging targets:
+
+```sh
+make
+# Equivalent to:
+make help
+```
 
 ```mermaid
 flowchart TB
@@ -62,7 +80,17 @@ The initramfs contains `/init`, BusyBox, published Markdown, generated diagram i
 
 Next, the snapshot script boots that image under v86 on the build machine. It verifies that Linux reached the expected ncurses application as PID 1, prepares the guest memory, stops execution, and saves a zstd-compressed machine snapshot. Build metadata records source and binary hashes. The web assembly step refuses stale guest inputs, so an edited note cannot silently ship beside a snapshot containing its previous version.
 
-Compiler caches, the Go binary, diagram renders, and PDF renders are reused where possible. `make web` is useful for browser-only changes, while notes or guest C changes require the full build. `make package` creates a deployment archive and SHA-256 checksum after building.
+Compiler caches, the Go binary, diagram renders, and PDF renders are reused where possible. For browser-only changes, reuse the existing guest:
+
+```sh
+make web
+```
+
+Notes or guest C changes require the full build. To build and create a deployment archive with a SHA-256 checksum:
+
+```sh
+make package
+```
 
 ## Markdown becomes terminal data
 

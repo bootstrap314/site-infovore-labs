@@ -24,7 +24,7 @@ static void view_draw(void) {
     int begin=reader_page*body_height;
     for(int i=0;i<body_height && begin+i<row_count;i++) {
         ReadRow *row=&read_rows[begin+i];
-        if(row->text)wide_text(4+i,x+row->offset,row->text,width-row->offset,row->pair,reader_pan);
+        read_row_output(row,4+i,x,width);
     }
     text(LINES-2,x,COLS<66 ? "↑/↓ pages · d diagrams · q quit" : "↑/↓ or PgUp/PgDn pages · h/l pan · d diagrams · q / Esc returns to shell",3);
     char footer[80];snprintf(footer,sizeof(footer),"[ Prev ] [ Next ] [ Quit ]  %d/%d%s",reader_page+1,reader_pages,note_has_diagrams() ? (reader->ascii ? " ASCII" : " Images") : "");

@@ -38,9 +38,14 @@ footer button [data-text-label]{color:inherit;padding:0}footer button [data-text
 .text-note-back{font:inherit;color:var(--accent);background:transparent;border:1px solid var(--border);border-radius:3px;padding:7px 10px;cursor:pointer}
 .reader-controls a{color:var(--accent);border:1px solid var(--border);border-radius:3px;background:var(--bg);padding:7px 9px;text-decoration:none;white-space:nowrap}
 .reader-controls a:hover{border-color:var(--accent)}
-.text-view .post-screenshot{display:inline-block;vertical-align:top;width:calc(50% - 12px);max-width:460px;margin:20px 12px 20px 0}
+.text-view article{display:flow-root}
+.text-view .post-screenshot{float:right;width:34%;max-width:320px;margin:0 0 20px 28px}
 .text-view .post-screenshot img{display:block;width:100%;border:1px solid var(--border);border-radius:8px}
-@media(max-width:700px){.text-view .post-screenshot{display:block;width:100%;margin:20px 0}}
+.text-view pre,.text-view .mermaid-diagram,.text-view hr{clear:both}
+.text-view code{font:inherit;background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:1px 4px}
+.text-view .code-block{border:1px solid var(--border);border-radius:5px;padding:16px 18px}
+.text-view pre code{border:0;background:none;border-radius:0;padding:0}
+@media(max-width:700px){.text-view .post-screenshot{float:none;display:block;width:100%;margin:20px auto}}
 
 /* Mermaid images and their optional character-cell counterparts share a center. */
 .text-view .mermaid-diagram{text-align:center}

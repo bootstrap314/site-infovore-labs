@@ -45,6 +45,7 @@ try {
     await position(page,n);
     text+=await screen().innerText();
     if(!sawImage && await page.evaluate(()=>window.siteMetrics.imageStorage>0)) {
+      assert.match(await screen().innerText(),/menu-bar panel/,'Screenshot shares its terminal page with the app description');
       sawImage=true;await page.screenshot({path:'.test-results/projects-diagram.png'});
     }
     if(n+1<pages)await page.keyboard.press('PageDown');
@@ -70,8 +71,8 @@ try {
   assert.equal(await page.locator('[data-text-project]:visible').count(),1);
   assert.equal(await page.locator('[data-text-note]:visible').count(),0);
   const images=page.locator('[data-text-project="0"] img');
-  assert.equal(await images.count(),6);
-  assert.equal(await page.locator('[data-text-project="0"] .post-screenshot').count(),2);
+  assert.equal(await images.count(),5);
+  assert.equal(await page.locator('[data-text-project="0"] .post-screenshot').count(),1);
   assert.equal(await page.locator('#post-repository').getAttribute('href'),'https://github.com/bootstrap314/ac-man');
   for(const image of await images.all()) {await image.scrollIntoViewIfNeeded();await image.evaluate(el=>{el.loading='eager';});await page.waitForFunction(el=>el.complete && el.naturalWidth>0,await image.elementHandle());}
   assert.equal(await images.evaluateAll(items=>items.every(el=>el.complete && el.naturalWidth>0)),true);
@@ -81,6 +82,13 @@ try {
   assert.equal(await fullSize.locator('img').evaluate(el=>el.naturalWidth),760);
   await fullSize.close();await page.bringToFront();
   await page.locator('[data-text-project="0"] .post-screenshot').first().scrollIntoViewIfNeeded();
+  const wrapped=await page.locator('[data-text-project="0"] .post-screenshot').evaluate(figure=>{
+    const image=figure.getBoundingClientRect(),paragraph=figure.nextElementSibling;
+    const range=document.createRange();range.selectNodeContents(paragraph);
+    const first=range.getClientRects()[0];
+    return first.right<image.left && first.top<image.bottom && first.bottom>image.top;
+  });
+  assert.equal(wrapped,true,'Article prose flows beside the single screenshot');
   await page.screenshot({path:'.test-results/projects-screenshots-text.png'});
   await page.locator('#text-project-back').click();
   await page.waitForFunction(()=>window.siteMetrics.renderedIdentity?.note===-1);
@@ -92,7 +100,7 @@ try {
   await page.emulateMedia({colorScheme:'light'});
   for(const image of await images.all()) {await image.scrollIntoViewIfNeeded();await image.evaluate(el=>{el.loading='eager';});await page.waitForFunction(el=>el.complete && el.naturalWidth>0,await image.elementHandle());}
   await page.locator('#text-close').click();
-  console.log('Checkpoint passed');results.push('Scoped text view, index-to-reader synchronization, and clickable repository/full-size links, four light/dark diagrams and two native app screenshots');
+  console.log('Checkpoint passed');results.push('Scoped text view, index-to-reader synchronization, and clickable repository/full-size links, four light/dark diagrams and one native app screenshot with wrapped text');
 
   await page.locator('[data-page="6"]').click();await section(page,6);await prompt();
   await page.keyboard.type('view /projects/ac-man.md');await page.keyboard.press('Enter');

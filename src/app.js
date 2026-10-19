@@ -66,7 +66,7 @@ function syncTextView() {
     const buffer=terminal.buffer.active;
     // System's body excludes the ncurses frame; Shell includes the current
     // viewport, including a pager or history the visitor has scrolled to.
-    const first=page===5 ? 8 : 0,last=page===5 ? terminal.rows-4 : terminal.rows;
+    const first=page===5 ? 4 : 0,last=page===5 ? terminal.rows-4 : terminal.rows;
     const lines=[];
     for(let row=first;row<last;row++)lines.push(buffer.getLine(buffer.viewportY+row)?.translateToString(true) || '');
     const content=lines.join('\n').trim();

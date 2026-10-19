@@ -6,6 +6,7 @@ import { noteSources } from './notes.mjs';
 import { themeCss } from '../src/themes.js';
 import { buildResumePdf } from './resume-pdf.mjs';
 import { buildOffline } from './offline.mjs';
+import { patchImageAddon } from './image-addon.mjs';
 
 const metadata = JSON.parse(await readFile('public/vm/metadata.json', 'utf8'));
 if (JSON.stringify(await noteSources()) !== JSON.stringify(metadata.noteSources)) throw new Error('Notes changed. Run make build to rebuild the guest and snapshot.');
@@ -31,6 +32,7 @@ const assets = {
 let totalRaw = 0, totalBrotli = 0;
 for (const [key, path] of Object.entries(assets)) {
   let data = await readFile(path);
+  if (key === 'imageAddon') data = Buffer.from(patchImageAddon(data.toString()));
   if (key === 'style') data = Buffer.concat([data,Buffer.from(themeCss())]);
   const hash = createHash('sha256').update(data).digest('hex').slice(0,12);
   const basename = path.split('/').pop();

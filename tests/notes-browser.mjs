@@ -29,7 +29,7 @@ try {
   await guest(page,()=>window.siteMetrics.identity.page===2);
   const menuScreen=await page.locator('.xterm-screen').boundingBox();
   const menuSize=await page.evaluate(()=>window.siteMetrics.identity);
-  await page.mouse.click(menuScreen.x+menuScreen.width/menuSize.cols*40,menuScreen.y+menuScreen.height/menuSize.rows*5.5);
+  await page.mouse.click(menuScreen.x+menuScreen.width/menuSize.cols*40,menuScreen.y+menuScreen.height/menuSize.rows*1.5);
   await guest(page,()=>window.siteMetrics.identity.page===3);
   await page.keyboard.press('ArrowRight');
   await guest(page,()=>window.siteMetrics.identity.page===4);
@@ -86,11 +86,31 @@ try {
   await guest(page,()=>window.siteMetrics.identity.note===-1);
   const screen=await page.locator('.xterm-screen').boundingBox();
   const size=await page.evaluate(()=>window.siteMetrics.identity);
-  await page.mouse.click(screen.x+screen.width/size.cols*15,screen.y+screen.height/size.rows*11.5);
+  await page.mouse.click(screen.x+screen.width/size.cols*15,screen.y+screen.height/size.rows*7.5);
   await guest(page,()=>window.siteMetrics.identity.note===0);
   await page.mouse.wheel(0,120);
   await guest(page,()=>window.siteMetrics.identity.readerPage>0);
   results.push({test:'Markdown reader, Unicode termtex math, Mermaid terminal images, keyboard and native mouse navigation',passed:true});
+  await page.keyboard.press('Escape');
+  await guest(page,()=>window.siteMetrics.identity.note===-1);
+  await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
+  await guest(page,()=>window.siteMetrics.renderedIdentity?.note===1);
+  let codeFound=false;
+  for(let n=0;n<15;n++) {
+    const output=await page.locator('.xterm-accessibility-tree').innerText();
+    if(output.includes('make build')) {
+      assert.match(output,/┌─+┐/);assert.match(output,/│ +make build +│/);assert.match(output,/└─+┘/);
+      codeFound=true;await page.screenshot({path:'.test-results/notes-code-box.png'});break;
+    }
+    await page.keyboard.press('PageDown');
+    await guest(page,()=>window.siteMetrics.renderedIdentity?.readerPage===window.siteMetrics.identity.readerPage);
+    await page.locator('.xterm-accessibility-tree').getByText(new RegExp(`\\b${n+2}/`)).waitFor();
+  }
+  assert.ok(codeFound,'Build command appears in a bordered terminal code box');
+  await page.getByRole('button',{name:'Read as text',exact:true}).click();
+  assert.ok((await page.locator('[data-text-note="1"] .code-block code').allTextContents()).some(text=>text==='make build'));
+  await page.getByRole('button',{name:'Close text view'}).click();
+  results.push({test:'Commands render in bordered ncurses boxes and semantic HTML code blocks',passed:true});
   await page.getByRole('button',{name:'06 System'}).click();
   await guest(page,()=>window.siteMetrics.identity.page===5);
   await page.keyboard.press('t');

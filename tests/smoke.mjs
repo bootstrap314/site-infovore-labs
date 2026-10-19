@@ -23,6 +23,7 @@ try {
   assert.equal(warm.identity.pid,1);
   assert.match(warm.identity.kernel,/^6\.6\.90-personal/);
   assert.match(warm.identity.ncurses,/^ncurses 6\.5/);
+  assert.doesNotMatch(await page.locator('.xterm-accessibility-tree').innerText(),/PERSONAL \/ SPACE|LINUX\s+\/\s+NCURSES/);
   await page.screenshot({path:'.test-results/desktop.png',fullPage:true});
   await page.locator('.xterm-helper-textarea').focus();
   await page.keyboard.press('ArrowRight'); await guestPage(page,1);
@@ -33,7 +34,7 @@ try {
   await page.keyboard.press('1'); await guestPage(page,0);
   const screen = await page.locator('.xterm-screen').boundingBox();
   const identity = await page.evaluate(() => window.siteMetrics.identity);
-  await page.mouse.click(screen.x + screen.width / identity.cols * 29.5, screen.y + screen.height / identity.rows * 5.5);
+  await page.mouse.click(screen.x + screen.width / identity.cols * 29.5, screen.y + screen.height / identity.rows * 1.5);
   await guestPage(page,2);
   await page.getByRole('button',{name:'04 Notes'}).click(); await guestPage(page,3);
   await page.keyboard.press('?');

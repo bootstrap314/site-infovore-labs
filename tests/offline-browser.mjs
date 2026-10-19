@@ -35,8 +35,12 @@ const ready=page=>page.waitForFunction(()=>window.siteMetrics?.ready,null,{timeo
 const build=async()=>JSON.parse((await readFile(`${root}/sw.js`,'utf8')).match(/const BUILD=(.*);/)[1]);
 const update=page=>page.evaluate(async()=>{
   const registration=await navigator.serviceWorker.getRegistration();
-  await registration.update();
-  const worker=registration.installing;
+  let worker;
+  const found=()=>{worker=registration.installing;};
+  registration.addEventListener('updatefound',found);
+  try {await registration.update();}
+  finally {registration.removeEventListener('updatefound',found);}
+  worker ||= registration.installing;
   if(!worker)return 'unchanged';
   if(['activated','redundant'].includes(worker.state))return worker.state;
   return new Promise(resolve=>worker.addEventListener('statechange',()=>{

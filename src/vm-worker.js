@@ -1,10 +1,30 @@
-let vm, timer, output = '', control = '';
+let vm, timer, output = [], control = '';
 const send = (type, data) => postMessage({type, ...data});
-const flush = () => { if (output) { send('output',{text:output}); output = ''; } timer = undefined; };
+const flush = () => { if (output.length) { send('output',{bytes:new Uint8Array(output)}); output = []; } timer = undefined; };
 const buffer = async url => {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not load ${url}: HTTP ${response.status}`);
   return response.arrayBuffer();
+};
+// Only the explicit shell command contacts this fixed public-IP service.
+// A lookup failure belongs to the command, never to the VM boot/error UI.
+const publicIp = async ({publicIpRequest:id, family}) => {
+  if (!Number.isSafeInteger(id) || id <= 0 || ![0,4,6].includes(family)) return;
+  const abort = new AbortController();
+  const timeout = setTimeout(() => abort.abort(), 6000);
+  let address = '!lookup';
+  try {
+    const host = family === 4 ? 'api' : family === 6 ? 'api6' : 'api64';
+    const response = await fetch(`https://${host}.ipify.org?format=json`, {
+      signal:abort.signal, credentials:'omit', cache:'no-store', referrerPolicy:'no-referrer',
+    });
+    if (!response.ok) throw new Error('Lookup failed');
+    const {ip} = await response.json();
+    // The guest also validates with inet_pton before invoking the native tool.
+    if (typeof ip !== 'string' || ip.length > 45 || !/^[0-9a-f:.]+$/i.test(ip)) throw new Error('Invalid address');
+    address = ip;
+  } catch {} finally { clearTimeout(timeout); }
+  vm?.serial_send_bytes(1, new TextEncoder().encode(`A ${id} ${address}\n`));
 };
 onmessage = async ({data}) => {
   try {
@@ -28,7 +48,7 @@ onmessage = async ({data}) => {
     } else options.initial_state = {buffer:loaded[0]};
     vm = new V86(options);
     vm.add_listener('serial0-output-byte', byte => {
-      output += String.fromCharCode(byte);
+      output.push(byte);
       if (!timer) timer = setTimeout(flush, 8);
     });
     vm.add_listener('serial1-output-byte', byte => {
@@ -36,12 +56,16 @@ onmessage = async ({data}) => {
       if (byte !== 10) return;
       try {
         const identity = JSON.parse(control.trim());
+        if (identity.publicIpRequest) { publicIp(identity); control = ''; return; }
         flush();
         const resources = performance.getEntriesByType('resource');
         send('guest',{identity,workerMs:performance.now()-started,transferBytes:resources.reduce((n,r)=>n+r.transferSize,0)});
       } catch {}
       control = '';
     });
-    vm.add_listener('emulator-started',() => send('started',{}));
+    let announced=false;
+    vm.add_listener('emulator-started',() => {
+      if(!announced) {announced=true;send('started',{});}
+    });
   } catch (error) { send('error',{message:error.message}); }
 };

@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir,writeFile } from 'node:fs/promises';
-const browser = await chromium.launch({channel:'chrome',headless:true});
+const browser = await chromium.launch({channel:process.env.CHROME_CHANNEL || 'chrome',headless:true});
 const base = process.env.TEST_URL || 'http://127.0.0.1:4173';
 const results = [];
 try {

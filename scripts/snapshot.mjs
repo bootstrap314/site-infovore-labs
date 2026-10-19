@@ -53,10 +53,16 @@ try {
   const compressed = zstdCompressSync(state, {params:{[constants.ZSTD_c_compressionLevel]:19}});
   await writeFile('public/vm/state.bin.zst', compressed);
   await rm('public/vm/state.bin.gz',{force:true});
-  const inputs = ['guest/site.c','guest/kernel.config','guest/build.sh','scripts/initramfs.py','scripts/vm-options.mjs','public/vm/bzImage','public/vm/initramfs.cpio.gz','public/vm/seabios.bin','public/vm/vgabios.bin','node_modules/v86/build/v86.wasm','node_modules/v86/build/libv86.js'];
+  const noteSources = JSON.parse(await readFile('.build/notes-sources.json','utf8'));
+  const projectSources = JSON.parse(await readFile('.build/projects-sources.json','utf8'));
+  const inputs = ['guest/site.c','guest/reader.h','guest/kernel.config','guest/build.sh','scripts/initramfs.py','scripts/vm-options.mjs','scripts/notes.mjs','scripts/diagram.mjs','package-lock.json','.build/notes.h','.build/notes.json','.build/notes.html','public/vm/bzImage','public/vm/initramfs.cpio.gz','public/vm/seabios.bin','public/vm/vgabios.bin','node_modules/v86/build/v86.wasm','node_modules/v86/build/libv86.js'];
   const hashes = {};
+  inputs.push('guest/archive.sh','compose.yaml');
+  inputs.push('scripts/resume.mjs','misc/resume.tex','.build/resume.h');
+  inputs.push('.build/projects.h','.build/projects.json','.build/projects.html');
+  inputs.push('guest/ip.h','guest/shell.h','guest/view.h','guest/busybox.config','guest/profile','guest/shell-help');
   for (const path of inputs) hashes[path] = createHash('sha256').update(await readFile(path)).digest('hex');
-  const metadata = {identity, coldBootMs:Math.round(bootMs), stateBytes:state.length, compressedBytes:compressed.length, hashes};
+  const metadata = {identity, coldBootMs:Math.round(bootMs), stateBytes:state.length, compressedBytes:compressed.length, hashes, noteSources, projectSources};
   await writeFile('public/vm/metadata.json', JSON.stringify(metadata, null, 2) + '\n');
   console.log(JSON.stringify(metadata, null, 2));
 } finally {

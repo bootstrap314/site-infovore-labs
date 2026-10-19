@@ -1,0 +1,4 @@
+github.com/doug/termtex v0.0.0-20260918165034-c407d5cf5251 h1:E9oaEwpD8bHvNbTcNuS3ArwK+aAP3CVNzcJTIuARzNk=
+github.com/doug/termtex v0.0.0-20260918165034-c407d5cf5251/go.mod h1:jmLFSaI+MNAXoomKqZk20dkVWzY/3DpFp8EdWe1wokg=
+github.com/yuin/goldmark v1.8.2 h1:kEGpgqJXdgbkhcOgBxkC0X0PmoPG1ZyoZ117rDVp4zE=
+github.com/yuin/goldmark v1.8.2/go.mod h1:ip/1k0VRfGynBgxOz0yCqHrbZXhcjxyuS66Brc7iBKg=

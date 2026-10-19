@@ -3,8 +3,10 @@ services:
     build: ./guest
     volumes:
       - .:/project
-      - guest-cache:/build
+      - guest-cache-verified-v1:/build
     working_dir: /project
     command: ["sh", "guest/build.sh"]
 volumes:
-  guest-cache:
+  # Retire all pre-verification cache state, including compiled dependencies.
+  # Do not migrate old source trees or binaries into this volume.
+  guest-cache-verified-v1:

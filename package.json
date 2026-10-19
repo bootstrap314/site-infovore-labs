@@ -5,18 +5,29 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/serve.mjs",
-    "build": "node scripts/build.mjs",
-    "vm:build": "docker compose run --build --rm guest-builder",
-    "vm:snapshot": "node scripts/snapshot.mjs",
-    "test": "node tests/smoke.mjs",
+    "build": "make build",
+    "package:static": "make package",
+    "vm:build": "make guest",
+    "vm:snapshot": "make snapshot",
+    "test": "make test",
     "bench": "node tests/benchmark.mjs"
   },
   "dependencies": {
     "@xterm/addon-fit": "0.11.0",
+    "@xterm/addon-image": "0.9.0",
     "@xterm/xterm": "6.0.0",
     "v86": "0.5.358"
   },
   "devDependencies": {
-    "playwright": "1.58.2"
+    "beautiful-mermaid": "1.1.3",
+    "mermaid": "12.2.0",
+    "playwright": "1.58.2",
+    "remark-frontmatter": "5.0.0",
+    "remark-gfm": "4.0.1",
+    "remark-math": "6.0.0",
+    "remark-parse": "11.0.0",
+    "string-width": "8.3.0",
+    "unified": "11.0.5",
+    "yaml": "2.9.1"
   }
 }

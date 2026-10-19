@@ -1,0 +1,19 @@
+# Optional static origin. Run from the project root with:
+# caddy run --config deploy/Caddyfile
+# Replace :8080 with your domain for Caddy-managed HTTPS.
+:8080 {
+    root * ./dist
+
+    @assets path /assets/*
+    header @assets Cache-Control "public, max-age=31536000, immutable"
+
+    @shell not path /assets/*
+    header @shell Cache-Control "no-cache"
+
+    @wasm path *.wasm
+    header @wasm Content-Type application/wasm
+
+    file_server {
+        precompressed br gzip
+    }
+}

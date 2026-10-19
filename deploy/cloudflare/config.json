@@ -1,0 +1,10 @@
+{
+  "staging": {
+    "bucket": "infovore-labs-staging",
+    "domains": ["staging.infovore-labs.com"]
+  },
+  "production": {
+    "bucket": "infovore-labs-production",
+    "domains": ["www.infovore-labs.com", "infovore-labs.com"]
+  }
+}

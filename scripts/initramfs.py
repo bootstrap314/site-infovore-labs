@@ -22,13 +22,17 @@ def entry(name, mode, data=b"", major=0, minor=0):
 
 for file in sorted(root.rglob("*")):
     name = str(file.relative_to(root))
-    if file.is_dir():
+    if file.is_symlink():
+        entry(name, stat.S_IFLNK | 0o777, str(file.readlink()).encode())
+    elif file.is_dir():
         entry(name, stat.S_IFDIR | 0o755)
     else:
-        entry(name, stat.S_IFREG | (0o755 if name == "init" else 0o644), file.read_bytes())
+        entry(name, stat.S_IFREG | (0o755 if file.stat().st_mode & 0o111 else 0o644), file.read_bytes())
 entry("dev/console", stat.S_IFCHR | 0o600, major=5, minor=1)
 entry("dev/ttyS0", stat.S_IFCHR | 0o600, major=4, minor=64)
 entry("dev/ttyS1", stat.S_IFCHR | 0o600, major=4, minor=65)
 entry("dev/null", stat.S_IFCHR | 0o666, major=1, minor=3)
+entry("dev/tty", stat.S_IFCHR | 0o666, major=5, minor=0)
+entry("dev/ptmx", stat.S_IFCHR | 0o666, major=5, minor=2)
 entry("TRAILER!!!", 0)
 output.write_bytes(gzip.compress(archive.getvalue(), compresslevel=9, mtime=0))

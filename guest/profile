@@ -1,0 +1,6 @@
+export PATH=/bin HOME=/root TERM=xterm-256color
+export PS1='\h:\w# '
+printf '\nPersonal / Space — a real BusyBox shell\n'
+printf "Type '?' for commands. Posts are in /notes and /projects; Tab completes filenames.\n"
+printf 'Try: ls, view <note.md>, top (q quits), or uname -a.\n'
+printf 'Use the page buttons to leave; exit returns Home.\n\n'

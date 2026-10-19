@@ -1,0 +1,23 @@
+#!/bin/sh
+printf '%s\n' \
+  'Personal / Space — BusyBox ash' \
+  '' \
+  'ls               List files (starts in /notes)' \
+  'find . -name "*.md"  Find Markdown files recursively' \
+  'view <post.md>    Read /notes or /projects; q quits, Tab completes' \
+  'top              Live Linux processes; q quits' \
+  'cat <file>       Read a file as plain text' \
+  'ip a             Public IP on virtual public0 (on-demand lookup)' \
+  'uname -a         Kernel information' \
+  'ps / free        Processes / memory' \
+  'uptime           Uptime and load' \
+  'clear            Clear the screen' \
+  'exit             Return Home' \
+  '' \
+  'Pipes, redirection, variables, history, and job control are ash.' \
+  'Scroll to see older output. Page buttons leave the shell.' \
+  '' \
+  'Installed BusyBox commands:'
+busybox --list
+printf '\nSite commands: ? view ip\n\nShell built-ins:\n'
+help

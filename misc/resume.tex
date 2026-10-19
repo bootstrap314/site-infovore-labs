@@ -1,0 +1,165 @@
+% resume.tex
+%
+% (c) 2002 Matthew Boedicker <mboedick@mboedick.org> (original author) http://mboedick.org
+% (c) 2003-2007 David J. Grant <davidgrant-at-gmail.com> http://www.davidgrant.ca
+% (c) 2007-2010 Todd C. Miller <Todd.Miller@courtesan.com> http://www.courtesan.com/todd
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
+
+\documentclass[letterpaper,11pt]{article}
+
+%-----------------------------------------------------------
+\usepackage[empty]{fullpage}
+\usepackage{enumitem}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{color}
+\definecolor{myBlue}{RGB}{17, 43, 84}
+\definecolor{myRed}{RGB}{8, 20, 38}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Adjust margins to 0.5in on all sides
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1.0in}
+\addtolength{\topmargin}{-0.5in}
+\addtolength{\textheight}{1.0in}
+
+%-----------------------------------------------------------
+%Custom commands
+\newcommand{\resitem}[1]{\item #1 \vspace{-1pt}}
+\newcommand{\resheading}[1]{{\large \color{white} \colorbox{myBlue}{\begin{minipage}{\textwidth}{\textbf{#1 \vphantom{p\^{E}}}}\end{minipage}}}}
+\newcommand{\ressubheading}[4]{
+\begin{tabular*}{7.3in}{l@{\extracolsep{\fill}}r} \color{myRed}
+\textbf{\large William Michael Turner} & will@infovore.net \\
+\end{tabular*}\vspace{-5pt}}
+%-----------------------------------------------------------
+\DeclareUnicodeCharacter{223C}{\ensuremath{\sim}}
+\linespread{0.95}
+\setlist[itemize, 1]{leftmargin=0.5cm, label=} % Sets the left margin for all second-level itemize lists
+\begin{document}
+
+\begin{tabular*}{7.5in}{l@{\extracolsep{\fill}}r}
+\textbf{\large William Michael Turner}  & 805.908.2642 \\
+4A Portanimicut Rd. &  will@infovore.net \\
+Orleans, MA 02653 & \\
+\end{tabular*}
+\\
+\vspace{0.1in}
+\textbf{Site Reliability, Platform, and Infrastructure Engineer with 13+ years designing and operating large-scale distributed systems, Kubernetes platforms, observability infrastructure, and incident-response programs. Experienced leading teams, improving reliability through SLO-driven engineering, and operating production environments ranging from 40,000+ server CDNs to AWS systems comprised of 1000s of accounts.}
+\vspace{0.1in}
+
+\resheading{Skills}
+
+\begin{description}
+\item[Programming:]
+Python, Go, Lua, Terraform, Bash, C
+\item[Database/KV:] PostgreSQL, Redis, ClickHouse, Elasticsearch
+\item[Cloud providers:]
+AWS, GCP, OpenStack, ESXi
+\item[CI/CD:]
+Github Actions, Jenkins, Flux, Custom solutions
+\item[Container technology:]
+Kubernetes, ECS, Kustomize, Kyverno, Helm, OCI Spec(s), Envoy, Istio
+\end{description}
+
+\resheading{Work Experience}
+\begin{itemize}
+\item[]
+        \ressubheading{Vercel}{Remote}{Team Leader/Site Reliability Engineer}{March 2024 - January 2026}
+            \begin{itemize}
+                \resitem{Wrote implementation of OTEL tracing module used in Vercel's global proxy, powering Vercel's distributed tracing feature}
+                \resitem{Determine work needed with leadership, create project plans for team, and run team meetings}
+                \resitem{Owned reliability for 19 regional Kubernetes clusters and thousands of production workloads}
+                \resitem{Established a 24/7 developer on-call program, reducing reliance on a catch-all escalation group by approximately 85\%}
+                \resitem{Designed and implemented a company-wide alert ingestion and routing platform, automating incident creation from high-signal alerts and reducing MTTR}
+                \resitem{Defined and implemented SLOs for critical edge services, improving reliability by an additional nine}
+                 \resitem{Designed multi-region request retry and load-balancing capabilities to improve availability and resiliency}
+                \resitem{Sole non-executive approver for customer-facing RCAs and led blameless incident retrospectives}
+                \resitem{Negotiated infrastructure and incident-management vendor contracts, reducing spend by approximately 40\%}
+            \end{itemize}
+
+    \item
+        \ressubheading{NEAR/Pagoda}{Remote}{Team Leader/Staff Site Reliability Engineer}{March 2022 - January 2024}
+            \begin{itemize}
+                \resitem{Introduced monetization for the company's APIs through management system I developed}
+                \resitem{Enabled realtime customer analytics dashboards using a Kafka and ksqlDB streaming pipeline system on Kubernetes}
+                \resitem{Led architecture decisions spanning Kubernetes, observability, API management, and software supply-chain security}
+                \resitem{Engineered a GitOps-driven, multi-tenant Kubernetes platform using Flux in GCP}
+                \resitem{Reduced toil by introducing SLIs and SLOs for critical services}
+                \resitem{Safeguarded company assets by developing a secure software supply-chain controls using Sigstore/Cosign and Kyverno}
+                \resitem{Developed an API in Python for provisioning customer access to NEAR RPC and ancillary APIs}
+                \resitem{Mentored engineers, led quarterly engineering off-sites, and represented the company at NEAR's APAC conference in Vietnam}
+            \end{itemize}
+    \newpage
+    \item
+        \ressubheading{LogMeIn/GoTo}{Remote}{Team Leader/Staff Software Development Engineer - DevSecOps }{October 2016 - March 2022}
+            \begin{itemize}
+            \resitem{Developed CI/CD framework using Jenkins pipeline DSL targeting AWS and Openstack enabling non-technical users to leverage CI/CD}
+            \resitem{Standardized packaging workflow for company's Python modules, resulting in much improved DevX}
+            \resitem{Managed relationships with Splunk, Sendgrid, and other vendors, resulting in much more attentive care}
+            \resitem{Decreased vendor spend by developing a DNS-based load balancer for use with Splunk intermediate forwarders in AWS}
+            \resitem{Reduced toil by automating AWS deployments using CloudFormation, Terraform, and Jenkins}
+            \resitem{Shutdown internal datacenter through leading cloud migration effort (bare metal to cloud) resulting in large cost savings}
+            \resitem{Developed Sendgrid SLA monitoring system that detected outages resulting in credits that otherwise would not have been granted}
+            \resitem{Reduced toil by writing a CLI for automating boilerplate work and project creation for custom CI/CD framework}
+    \end{itemize}
+
+
+    \item
+        \ressubheading{The Walt Disney Studios}{Glendale, CA}{Sr. Systems Engineer }{March 2015 - October 2016}
+            \begin{itemize}
+            \resitem{Wrote system to migrate 16PB of movie frames stored on LTO5 to denser LTO7 tapes that achieved 100\% success rate over a 9 month execution time}
+            \resitem{Tuned GPFS storage cluster to achieve 13\% faster throughput}
+            \resitem{Increased the studio's security posture by writing a CI/CD pipeline to provision and deploy CIS benchmark compliant AWS AMI images}
+            \resitem{Improved productivity across the studio by standardizing ticket and incident workflows }
+            \resitem{Engineered and deployed high throughput/availability ELK logging system for network security logs}
+            \resitem{Used Chef to develop automation solution for managing machine-local firewall configuration}
+            \resitem{Architected highly scalable AWS/Docker infrastructure in support of next-gen transcoding platform}
+            \resitem{Developed software to parallelize decompression and migration of assets off of legacy storage, increasing performance by ~75\%}
+
+    \end{itemize}
+
+
+    \item
+        \ressubheading{EdgeCast Networks}{Santa Monica, CA}{SysOps Engineer}{September 2013 - March 2015}
+            \begin{itemize}
+            \resitem{Wrote mass provisioning software to "one button push" provision whole CDN points of presence (using PXE, IPMI, and other vendor tooling)}
+            \resitem{Held administrator responsibility for 40,000+ machine bare-metal Linux production environment}
+            \resitem{Wrote auditing tool in to ensure servers needing repairs were removed from production, increasing performance by 4\%}
+            \resitem{Built custom Anycast network and loadbalancers using IPVS for load distribution and Quagga for BGP}
+            \resitem{Developed CLI tool to automate incident/ticket management in ServiceNow, reducing time spend by over 50\%}
+            \resitem{Conducted in-depth performance analysis on ext4 vs XFS for CDN cache hosting using iozone, iostat}
+    \end{itemize}
+
+    \item
+        \ressubheading{Avum Inc.}{Malibu, CA}{Research Engineer}{June 2012 - September 2013}
+            \begin{itemize}
+            \resitem{Authored technical responses to RFPs, successfully winning DoD contracts}
+            \resitem{Designed network architecture for Intelligent Agent Framework project}
+            \resitem{Worked closely with Navy stakeholders for development and testing of new BPEL flows}
+            \resitem{Trained and managed new-hires and interns}
+            \resitem{Managed VMWare ESXi clusters in support of various Navy and DoD projects}
+
+    \end{itemize}
+\end{itemize}
+
+
+
+
+
+\resheading{Education}
+\begin{itemize}
+\item
+    \ressubheading{Moorpark College}{Moorpark, CA}{Coursework towards Pure Mathematics}{2009 - 2013}
+    \begin{itemize}
+        \resitem{Focus on Differential Geometry}
+    \end{itemize}
+
+\end{itemize}
+
+
+
+\end{document}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 
 const base = process.env.TEST_URL || 'http://127.0.0.1:4173';
-const browser = await chromium.launch({channel:'chrome',headless:true});
+const browser = await chromium.launch({channel:process.env.CHROME_CHANNEL || 'chrome',headless:true});
 await mkdir('.test-results',{recursive:true});
 const results = [];
 async function ready(page) {
@@ -24,9 +24,10 @@ try {
   assert.match(warm.identity.kernel,/^6\.6\.90-personal/);
   assert.match(warm.identity.ncurses,/^ncurses 6\.5/);
   await page.screenshot({path:'.test-results/desktop.png',fullPage:true});
+  await page.locator('.xterm-helper-textarea').focus();
   await page.keyboard.press('ArrowRight'); await guestPage(page,1);
   await page.keyboard.press('Tab'); await guestPage(page,2);
-  await page.keyboard.press('5'); await guestPage(page,4);
+  await page.keyboard.press('6'); await guestPage(page,5);
   await page.locator('.xterm-accessibility-tree').getByText(/Yes, this is Linux/).waitFor();
   await page.screenshot({path:'.test-results/system.png',fullPage:true});
   await page.keyboard.press('1'); await guestPage(page,0);
@@ -38,12 +39,30 @@ try {
   await page.keyboard.press('?');
   await page.locator('.xterm-accessibility-tree').getByText(/A small field guide/).waitFor();
   await page.keyboard.press('?');
-  await page.getByRole('button',{name:'Restart Linux session'}).click();
+  const freshManifest=page.waitForRequest('**/*-manifest.json');
+  await Promise.all([
+    page.waitForEvent('load'),
+    page.getByRole('button',{name:'Restart Linux session'}).click(),
+  ]);
+  await freshManifest;
   await ready(page); await guestPage(page,0);
   await page.getByRole('button',{name:'Read as text'}).click();
   assert.equal(await page.locator('#text-view').isVisible(),true);
+  await page.screenshot({path:'.test-results/text-view.png'});
+  assert.equal(await page.getByRole('button',{name:'Hide text'}).getAttribute('aria-expanded'),'true');
+  await page.getByRole('button',{name:'Hide text'}).click();
+  assert.equal(await page.locator('#text-view').isVisible(),false);
+  await page.getByRole('button',{name:'Read as text'}).click();
+  await page.getByRole('button',{name:'Close text view'}).click();
+  assert.equal(await page.locator('#text-view').isVisible(),false);
+  assert.equal(await page.locator('#text-toggle').evaluate(element=>element===document.activeElement),true);
+  await page.getByRole('button',{name:'Read as text'}).click();
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#text-view').isVisible(),false);
+  assert.equal(await page.locator('#text-toggle').getAttribute('aria-expanded'),'false');
+  assert.equal(await page.locator('#text-toggle').evaluate(element=>element===document.activeElement),true);
   assert.deepEqual(errors,[]);
-  results.push({test:'snapshot, keyboard, native ncurses mouse, page buttons, help, restart, text view',readyMs:warm.readyMs,passed:true});
+  results.push({test:'snapshot, keyboard, native ncurses mouse, page buttons, help, restart, text view toggle/close/Escape and focus restoration',readyMs:warm.readyMs,passed:true});
   await page.goto(base+'/?cold');
   const cold = await ready(page);
   assert.equal(cold.mode,'cold');
@@ -52,7 +71,7 @@ try {
   await page.close();
   const mobile = await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
   await mobile.goto(base); await ready(mobile);
-  await mobile.locator('[data-page="4"]').tap(); await guestPage(mobile,4);
+  await mobile.locator('[data-page="5"]').tap(); await guestPage(mobile,5);
   await mobile.locator('.xterm-accessibility-tree').getByText(/Yes, this is Linux/).waitFor();
   await mobile.screenshot({path:'.test-results/mobile.png',fullPage:true});
   assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true);
@@ -69,6 +88,13 @@ try {
   assert.equal(recovered.mode,'cold');
   results.push({test:'missing snapshot automatically falls back to a real cold boot',passed:true});
   await fallback.close();
+  const noScript=await browser.newPage({javaScriptEnabled:false});
+  await noScript.goto(base);
+  assert.equal(await noScript.locator('#text-view').isVisible(),true);
+  assert.equal(await noScript.locator('#text-close').isVisible(),false);
+  assert.equal(await noScript.locator('#text-toggle').isVisible(),false);
+  results.push({test:'text remains available without JavaScript',passed:true});
+  await noScript.close();
   console.log(JSON.stringify(results,null,2));
   await writeFile('.test-results/smoke.json',JSON.stringify(results,null,2)+'\n');
-} finally { await browser.close(); }
+} catch(error) {console.error(error);throw error;} finally { await browser.close(); }

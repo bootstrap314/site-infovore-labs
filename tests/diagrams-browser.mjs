@@ -1,3 +1,4 @@
+import {projectIndex,openProject} from './project-selection.mjs';
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -6,6 +7,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:4173';
 const browser=await chromium.launch({channel:process.env.CHROME_CHANNEL || 'chrome',headless:true});
 const context=await browser.newContext({viewport:{width:1280,height:1000},colorScheme:'dark'});
 const page=await context.newPage(),results=[],errors=[];
+let acManIndex;
 page.on('pageerror',error=>errors.push(error.message));
 const screen=target=>target.locator('.xterm-accessibility-tree');
 const ready=target=>target.waitForFunction(()=>window.siteMetrics?.ready,null,{timeout:45000});
@@ -21,7 +23,7 @@ const next=async target=>{
   await position(target);
 };
 const findDiagram=async target=>{
-  await target.waitForFunction(()=>window.siteMetrics.renderedIdentity?.page===4 && window.siteMetrics.renderedIdentity.note===0);
+  await target.waitForFunction(n=>window.siteMetrics.renderedIdentity?.page===4 && window.siteMetrics.renderedIdentity.note===n,acManIndex);
   await mode(target,1);
   for(let n=0;n<40;n++) {
     await position(target);
@@ -41,8 +43,8 @@ try {
   await page.goto(base+'/#projects');await ready(page);
   await page.waitForFunction(()=>window.siteMetrics.renderedIdentity?.page===4);
   assert.equal(await page.locator('[data-note="diagrams"]').isVisible(),false);
-  await page.locator('#note-open').click();
-  await page.waitForFunction(()=>window.siteMetrics.renderedIdentity?.note===0);
+  acManIndex=await projectIndex(page,'Engineering ac-man');
+  await openProject(page,'Engineering ac-man');
   await findDiagram(page);
   const asciiPage=await page.evaluate(()=>window.siteMetrics.renderedIdentity.readerPage);
   await screen(page).getByText(/\|.*Cloud \+ AC.*\|/).waitFor();
@@ -57,7 +59,7 @@ try {
 
   await page.locator('#text-toggle').click();
   assert.equal(await page.locator('#text-view').getAttribute('data-diagrams'),'svg');
-  const figure=page.locator('[data-text-project="0"] .mermaid-diagram').first(),img=figure.locator('img');
+  const figure=page.locator(`[data-text-project="${acManIndex}"] .mermaid-diagram`).first(),img=figure.locator('img');
   await decoded(page,img);
   const vector=await page.evaluate(async url=>{const response=await fetch(url);return {type:response.headers.get('content-type'),source:await response.text()};},await img.evaluate(el=>el.currentSrc));
   assert.match(vector.type,/image\/svg\+xml/);assert.match(vector.source,/<svg/);
@@ -71,13 +73,13 @@ try {
   await page.locator('[data-text-diagrams]').click();
   await figure.locator('.diagram-ascii').waitFor();assert.equal(await img.isVisible(),false);
   assert.equal(await page.evaluate(()=>window.siteMetrics.renderedIdentity.diagramAscii),0,'Text mode leaves terminal images alone');
-  assert.equal(await page.locator('[data-text-project="0"] .post-screenshot img:visible').count(),1);
+  assert.equal(await page.locator(`[data-text-project="${acManIndex}"] .post-screenshot img:visible`).count(),1);
   await page.locator('[data-text-diagrams]').click();await decoded(page,img);
   const darkSource=await img.evaluate(el=>el.currentSrc);
   await page.emulateMedia({colorScheme:'light'});
   await page.waitForFunction(({el,old})=>el.currentSrc!==old,{el:await img.elementHandle(),old:darkSource});await decoded(page,img);
   await page.screenshot({path:'.test-results/diagram-svg-light.png'});
-  for(const image of await page.locator('[data-text-project="0"] .mermaid-diagram img').all())await decoded(page,image);
+  for(const image of await page.locator(`[data-text-project="${acManIndex}"] .mermaid-diagram img`).all())await decoded(page,image);
   await page.locator('#text-close').click();
   await page.locator('[data-page="3"]').click();
   await page.waitForFunction(()=>window.siteMetrics.renderedIdentity?.page===3);
@@ -104,27 +106,27 @@ try {
   await page.waitForFunction(()=>navigator.serviceWorker.controller,null,{timeout:60000});
   await context.setOffline(true);
   const offline=await context.newPage();await offline.goto(base+'/?cold#projects');await ready(offline);
-  await offline.locator('#note-open').click();await findDiagram(offline);
+  await openProject(offline,'Engineering ac-man');await findDiagram(offline);
   await offline.locator('#text-toggle').click();
-  for(const image of await offline.locator('[data-text-project="0"] .mermaid-diagram img').all())await decoded(offline,image);
+  for(const image of await offline.locator(`[data-text-project="${acManIndex}"] .mermaid-diagram img`).all())await decoded(offline,image);
   await offline.close();await context.setOffline(false);
   checkpoint('Offline cold boot uses ASCII; all project SVGs decode from the static cache');
 
   const mobile=await browser.newPage({viewport:{width:320,height:740},isMobile:true,hasTouch:true,colorScheme:'light'});
   await mobile.goto(base+'/#projects');await ready(mobile);
-  await mobile.locator('#note-open').tap();await findDiagram(mobile);
+  await openProject(mobile,'Engineering ac-man');await findDiagram(mobile);
   await mobile.screenshot({path:'.test-results/diagram-ascii-mobile.png',fullPage:true});
   await mobile.locator('#text-toggle').tap();
-  await decoded(mobile,mobile.locator('[data-text-project="0"] .mermaid-diagram img').first());
+  await decoded(mobile,mobile.locator(`[data-text-project="${acManIndex}"] .mermaid-diagram img`).first());
   await mobile.screenshot({path:'.test-results/diagram-svg-mobile.png'});
   assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await mobile.locator('[data-text-diagrams]').tap();
-  await mobile.locator('[data-text-project="0"] .diagram-ascii').first().waitFor();
+  await mobile.locator(`[data-text-project="${acManIndex}"] .diagram-ascii`).first().waitFor();
   await mode(mobile,1);
   assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await mobile.close();
   const noScript=await browser.newPage({javaScriptEnabled:false});await noScript.goto(base);
-  await decoded(noScript,noScript.locator('[data-text-project="0"] .mermaid-diagram img').first());
+  await decoded(noScript,noScript.locator(`[data-text-project="${acManIndex}"] .mermaid-diagram img`).first());
   await noScript.close();
   assert.deepEqual(errors,[]);
   checkpoint('320px touch layout and SVG text view without JavaScript');

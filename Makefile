@@ -22,7 +22,7 @@ export PORT TEST_URL CHROME_CHANNEL GO NPM DOCKER
         test-console test-smoke test-reader test-diagrams test-projects test-text-view test-offline \
         test-resume-browser test-shell test-ip bench clean clean-cache clean-all \
         check-node check-npm check-go check-docker check-dist check-preview browser-ready \
-        deploy-plan deploy-staging deploy-production test-publishing test-archives
+        deploy-plan deploy-staging deploy-production test-publishing test-archives test-image-renderer
 
 ##@ Start here
 help: ## Show targets, settings, and workflows without build dependencies
@@ -122,7 +122,10 @@ test-archives: check-docker ## Check archive rejection, extraction recovery, and
 test-console: deps ## Test the existing guest's serial console with snapshot and cold boots
 	"$(NODE)" tests/console.mjs
 
-test-browser: test-smoke test-reader test-diagrams test-projects test-text-view test-offline test-resume-browser test-shell test-ip ## Run every browser suite against the existing build
+test-browser: test-image-renderer test-smoke test-reader test-diagrams test-projects test-text-view test-offline test-resume-browser test-shell test-ip ## Run every browser suite against the existing build
+
+test-image-renderer: browser-ready ## Check translucent images for tile seams and partial-redraw artifacts
+	"$(NODE)" tests/image-renderer.mjs
 
 test-smoke: browser-ready ## Check startup, navigation, fallback, and responsive layout
 	"$(NODE)" tests/smoke.mjs

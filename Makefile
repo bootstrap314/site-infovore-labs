@@ -66,6 +66,7 @@ resume: deps ## Compile misc/resume.tex into intermediate résumé content
 	"$(NODE)" scripts/resume.mjs
 
 guest: check-docker content ## Compile Linux, BusyBox, and ncurses; rebuild the initramfs
+	@mkdir -p public/vm
 	"$(DOCKER)" compose run --build --rm guest-builder
 
 snapshot: guest ## Rebuild the guest and save its ready-to-use VM snapshot
